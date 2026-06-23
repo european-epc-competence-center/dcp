@@ -24,6 +24,10 @@ Comprehensive plan for a Java library analogous to `oid4vp`, implementing the **
 
 ### Reference implementation patterns
 
+When implementing code, consult the **Construct-X EDC DCP SPI** module for Java types, naming, and protocol wiring:
+
+- https://github.com/project-construct-x/constructx-edc/tree/develop/spi/dcp-spi
+
 Mirror existing `oid4vp` conventions:
 
 | oid4vp | Planned DCP equivalent |
@@ -89,6 +93,7 @@ Mirror existing `oid4vp` conventions:
 |----------|-----|-------|
 | Eclipse DCP project page | https://projects.eclipse.org/projects/technology.dataspace-dcp | Governance, release 1.0.0 (2025-07-18) |
 | EDC Identity Trust / CredentialServiceClient | https://github.com/eclipse-edc/Connector/tree/main/extensions/common/iam/identity-trust | Java reference; `PresentationQueryMessage` naming, JSON-LD compaction |
+| Construct-X EDC DCP SPI | https://github.com/project-construct-x/constructx-edc/tree/develop/spi/dcp-spi | Primary in-code implementation reference for DCP SPI types and conventions |
 | EDC issue: `@type` vs `type` on wire | https://github.com/eclipse-edc/Connector/issues/5209 | Implement compact JSON-LD on egress; accept both on ingress |
 
 ---
@@ -744,4 +749,5 @@ No REST controllers in the library — host application exposes verifier endpoin
 - VC Data Model 2.0: https://www.w3.org/TR/vc-data-model-2.0/
 - DSP: https://eclipse-dataspace-protocol-base.github.io/DataspaceProtocol/
 - EDC Identity Trust: https://github.com/eclipse-edc/Connector/tree/main/extensions/common/iam/identity-trust
+- Construct-X EDC DCP SPI (in-code reference): https://github.com/project-construct-x/constructx-edc/tree/develop/spi/dcp-spi
 - oid4vp module layout: [module-layout.md](module-layout.md)

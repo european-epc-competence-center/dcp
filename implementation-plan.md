@@ -151,12 +151,12 @@ dcp-java/
 └── dcp-spring-boot-starter/
 ```
 
-Package root: `de.eecc.oid4vc.dcp.*` (or `de.eecc.dcp.*` if separate org).
+Package root: `de.eecc.dcp.*`
 
 ### `dcp-core` package structure
 
 ```
-de.eecc.oid4vc.dcp/
+de.eecc.dcp/
 ├── Constants.java
 ├── api/
 │   ├── DcpPresentation.java           # Main facade
@@ -210,7 +210,7 @@ de.eecc.oid4vc.dcp/
 ### Holder-side extension package (phase 2+)
 
 ```
-de.eecc.oid4vc.dcp.service/
+de.eecc.dcp.service/
 ├── PresentationQueryHandler.java        # Handle incoming POST /presentations/query
 ├── CredentialStorageHandler.java        # POST /credentials (from CIP)
 ├── CredentialMessage.java
@@ -594,7 +594,7 @@ public final class Constants {
 ### Phase 6 — Claims extraction (1 week)
 
 - [ ] Port/adapt `PresentationParser` from oid4vp for JWT/LDP payloads in `presentation[]`
-- [ ] `PresentationClaims` interface (reuse or shared module `oid4vc-common`)
+- [ ] `PresentationClaims` interface like in oid4vc
 - [ ] `extractPresentationClaims` on facade
 
 **Deliverable:** claims extraction tests with sample VPs
@@ -637,7 +637,6 @@ public final class Constants {
 | Titanium JSON-LD | Optional strict JSON-LD | Phase 2+ if interop issues |
 | Presentation Exchange library | Optional typed PE models | Or `JsonNode` + manual validation initially |
 
-**Shared module consideration:** extract `PresentationClaims`, common crypto utilities into `oid4vc-common` to avoid duplication between oid4vp and dcp.
 
 ---
 
@@ -681,7 +680,7 @@ dcp:
     verifier-url: ""   # optional external vc-verifier; empty = local validation
 ```
 
-Dependency: `de.eecc.oid4vc:dcp-spring-boot-starter`
+Dependency: `de.eecc.dcp:dcp-spring-boot-starter`
 
 No REST controllers in the library — host application exposes verifier endpoints.
 
@@ -695,7 +694,7 @@ No REST controllers in the library — host application exposes verifier endpoin
 | Validation location | All local vs delegate crypto to vc-verifier | Hybrid: structural checks local, crypto delegatable |
 | DID resolution | Universal resolver vs did:web HTTP | Pluggable; document did:web as primary for dataspaces |
 | JSON-LD strictness | Jackson-only vs Titanium compaction | Jackson + tolerant ingress; add Titanium if TCK fails |
-| Repo placement | Same monorepo as oid4vp vs separate | Separate artifact coordinates; optional shared `oid4vc-common` |
+| Repo placement | Same monorepo as oid4vp vs separate | Separate artifact coordinates; |
 | Holder-side scope | Verifier-only v1 vs include CS handlers | Verifier-only for v0.1; CS in v0.2 |
 
 ---

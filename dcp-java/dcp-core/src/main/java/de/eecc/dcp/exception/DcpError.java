@@ -5,6 +5,9 @@ public sealed interface DcpError permits
         InternalError,
         InvalidSelfIssuedIdToken,
         CredentialServiceError,
+        InvalidQueryMessage,
+        InvalidPresentationResponse,
+        EmptyPresentationClaims,
         PresentationValidationFailed,
         UnknownSession {
 

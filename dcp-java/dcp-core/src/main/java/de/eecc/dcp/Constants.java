@@ -16,6 +16,14 @@ public final class Constants {
     public static final String PRESENTATIONS_QUERY_PATH = "/presentations/query";
     public static final String CREDENTIALS_PATH = "/credentials";
 
+    public static final String SCOPE_ALIAS_VC_TYPE = "org.eclipse.dspace.dcp.vc.type";
+    public static final String SCOPE_ALIAS_VC_ID = "org.eclipse.dspace.dcp.vc.id";
+
+    public static final String PRESENTATION_EXCHANGE_SUBMISSION_CONTEXT =
+            "https://identity.foundation/presentation-exchange/submission/v1";
+
+    public static final String DATA_URL_PREFIX = "data:";
+
     public static final String PROFILE_VC20_BSSL_JWT = "vc20-bssl/jwt";
     public static final String PROFILE_VC11_SL2021_JWT = "vc11-sl2021/jwt";
 

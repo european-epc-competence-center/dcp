@@ -1,8 +1,8 @@
 # DCP Java Library
 
-Java library for the verifier-side (and optionally holder-side) of the [Eclipse Decentralized Claims Protocol (DCP) v1.0.1](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/) Verifiable Presentation Protocol.
+Java library for the verifier-side and issuer-side of the [Eclipse Decentralized Claims Protocol (DCP) v1.0.1](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/): the **Verifiable Presentation Protocol** and the **Credential Issuance Protocol** offer flow.
 
-> **Status (0.1.x):** Wire DTOs, presentation query definitions, claims extraction helpers, and Spring Boot auto-configuration are available. The `DcpPresentation` facade methods for Self-Issued ID token validation, Credential Service queries, and VP validation are being added incrementally — see [implementation-plan.md](implementation-plan.md).
+> **Status (0.1.x):** Wire DTOs, presentation query definitions, credential offer definitions, claims extraction helpers, and Spring Boot auto-configuration are available. The `DcpPresentation` and `DcpIssuance` facade methods for Self-Issued ID token validation, HTTP clients, and VP validation are being added incrementally — see [implementation-plan.md](implementation-plan.md).
 
 ## Requirements
 
@@ -154,6 +154,40 @@ String partyGln = claims.identifier();
 
 The query requests both `GS1CompanyPrefixLicenseCredential` and `GS1PrefixLicenseCredential` via DCP `vc.type` scopes. Your Credential Service must map those scope strings to the corresponding stored credentials.
 
+### Credential offer flow
+
+An issuer prepares a **`CredentialOfferMessage`**, delivers it to the holder's **Credential Service** at `POST /credentials`, and the holder later redeems it with a **`CredentialRequestMessage`** to the issuer's **`/issuance`** endpoint.
+
+Define what to offer and build the wire message:
+
+```java
+import de.eecc.dcp.Constants;
+import de.eecc.dcp.api.DcpIssuance;
+import de.eecc.dcp.api.DcpOptions;
+import de.eecc.dcp.issuance.TypeCredentialOfferDefinition;
+import de.eecc.dcp.message.CredentialOfferMessage;
+import de.eecc.dcp.message.CredentialRequestMessage;
+
+DcpIssuance issuance = DcpIssuance.create(DcpOptions.builder().build());
+
+TypeCredentialOfferDefinition offer = TypeCredentialOfferDefinition.of(
+        "did:web:issuer.example",
+        TypeCredentialOfferDefinition.OfferedCredential.ofType(
+                "urn:uuid:8247b87d-8d72-47e1-8128-9ce47e3d829d",
+                "MembershipCredential",
+                Constants.PROFILE_VC20_BSSL_JWT));
+
+CredentialOfferMessage message = offer.toOfferMessage();
+// POST message to holder Credential Service at {credentialServiceUrl}/credentials
+// with a Bearer SI token issued by the issuer.
+
+// After the holder accepts the offer and returns holderPid:
+CredentialRequestMessage request = offer.toRequestMessage("holder-pid-from-cs");
+// POST request to issuer at {issuerServiceUrl}/issuance with holder Bearer SI token.
+```
+
+`CredentialOfferDefinition` mirrors `PresentationQueryDefinition`: use `toOfferMessage()` for the wire payload, `assertOfferMatches(message)` when receiving offers on the holder side, and `toRequestMessage(holderPid)` to redeem.
+
 ### Verifier presentation flow
 
 **Flow**
@@ -277,7 +311,8 @@ dcp-java/
 │       ├── message/                # PresentationQuery/ResponseMessage DTOs
 │       ├── query/                  # PresentationQueryDefinition implementations
 │       │   └── template/           # Built-in query templates (e.g. gs1)
-│       ├── client/                 # CredentialServiceClient
+│       ├── issuance/               # CredentialOfferDefinition implementations
+│       ├── client/                 # CredentialServiceClient, CredentialStorageClient, IssuerServiceClient
 │       ├── validation/             # PresentationValidator, DCP profiles
 │       ├── session/                # PresentationSession, repository
 │       ├── claims/                 # PresentationClaims extraction

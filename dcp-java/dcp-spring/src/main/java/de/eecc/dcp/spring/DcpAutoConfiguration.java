@@ -1,6 +1,7 @@
 package de.eecc.dcp.spring;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.eecc.dcp.api.DcpIssuance;
 import de.eecc.dcp.api.DcpPresentation;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -14,6 +15,12 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnClass(DcpPresentation.class)
 @EnableConfigurationProperties(DcpProperties.class)
 public class DcpAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DcpIssuance dcpIssuance(DcpProperties properties) {
+        return DcpIssuance.create(properties.toOptions());
+    }
 
     @Bean
     @ConditionalOnMissingBean

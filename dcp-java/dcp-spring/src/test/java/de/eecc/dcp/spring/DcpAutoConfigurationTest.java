@@ -1,5 +1,6 @@
 package de.eecc.dcp.spring;
 
+import de.eecc.dcp.api.DcpIssuance;
 import de.eecc.dcp.api.DcpPresentation;
 import de.eecc.dcp.api.DcpOptions;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,17 @@ class DcpAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(DcpAutoConfiguration.class));
+
+    @Test
+    void createsDcpIssuanceBeanFromProperties() {
+        contextRunner
+                .withPropertyValues("dcp.session-ttl=PT10M")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(DcpIssuance.class);
+                    assertThat(context.getBean(DcpIssuance.class).getOptions().getSessionTtl().toMinutes())
+                            .isEqualTo(10);
+                });
+    }
 
     @Test
     void createsDcpPresentationBeanFromProperties() {

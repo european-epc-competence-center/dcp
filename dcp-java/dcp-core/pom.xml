@@ -14,7 +14,7 @@
     <packaging>jar</packaging>
 
     <name>dcp</name>
-    <description>Framework-neutral DCP presentation protocol library</description>
+    <description>Framework-neutral DCP presentation and credential issuance library</description>
 
     <dependencies>
         <dependency>

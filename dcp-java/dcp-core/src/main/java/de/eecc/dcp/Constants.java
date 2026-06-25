@@ -12,9 +12,20 @@ public final class Constants {
     public static final String MESSAGE_TYPE_PRESENTATION_QUERY = "PresentationQueryMessage";
     public static final String MESSAGE_TYPE_PRESENTATION_RESPONSE = "PresentationResponseMessage";
 
+    public static final String MESSAGE_TYPE_CREDENTIAL_OFFER = "CredentialOfferMessage";
+    public static final String MESSAGE_TYPE_CREDENTIAL_REQUEST = "CredentialRequestMessage";
+    public static final String MESSAGE_TYPE_CREDENTIAL_OBJECT = "CredentialObject";
+    public static final String MESSAGE_TYPE_CREDENTIAL_MESSAGE = "CredentialMessage";
+
     public static final String CREDENTIAL_SERVICE_TYPE = "CredentialService";
+    public static final String ISSUER_SERVICE_TYPE = "IssuerService";
+
     public static final String PRESENTATIONS_QUERY_PATH = "/presentations/query";
     public static final String CREDENTIALS_PATH = "/credentials";
+    public static final String ISSUANCE_PATH = "/issuance";
+
+    public static final String CREDENTIAL_STATUS_ISSUED = "ISSUED";
+    public static final String CREDENTIAL_STATUS_REJECTED = "REJECTED";
 
     public static final String SCOPE_ALIAS_VC_TYPE = "org.eclipse.dspace.dcp.vc.type";
     public static final String SCOPE_ALIAS_VC_ID = "org.eclipse.dspace.dcp.vc.id";

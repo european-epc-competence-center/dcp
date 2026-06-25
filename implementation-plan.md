@@ -1,10 +1,12 @@
-# DCP Presentation Library — Implementation Plan
+# DCP Java Library — Implementation Plan
 
-Comprehensive plan for a Java library analogous to `oid4vp`, implementing the **Verifier-side** (and optionally **Credential Service** holder-side) of the [Eclipse Decentralized Claims Protocol (DCP) v1.0.1](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/) Verifiable Presentation Protocol.
+Comprehensive plan for a Java library analogous to `oid4vp`, implementing the **Verifier-side** (and optionally **Credential Service** holder-side) of the [Eclipse Decentralized Claims Protocol (DCP) v1.0.1](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/) **Verifiable Presentation Protocol** and the **issuer-side offer flow** of the **Credential Issuance Protocol (CIP)**.
 
 ## 1. Goal and scope
 
-### In scope (presentation-focused)
+### In scope
+
+**Verifiable Presentation Protocol (presentation-focused)**
 
 - Validate **Self-Issued ID Tokens** (SI tokens) from clients
 - Discover holder **Credential Service** endpoints from DID documents
@@ -14,9 +16,21 @@ Comprehensive plan for a Java library analogous to `oid4vp`, implementing the **
 - Pluggable DID resolution, HTTP client, session store, validation backend
 - Optional Spring Boot auto-configuration (mirror `oid4vp-spring`)
 
+**Credential Issuance Protocol — offer flow (issuer-side, phase 1b)**
+
+- Build **`CredentialOfferMessage`** with **`CredentialObject`** entries
+- **`CredentialOfferDefinition`** interface (mirror of `PresentationQueryDefinition`)
+- **`TypeCredentialOfferDefinition`** for credential-type offers
+- Build **`CredentialRequestMessage`** to redeem a prior offer (holder-side initiation)
+- Wire DTOs: **`CredentialMessage`** (delivery), **`CredentialContainer`**
+- Pluggable **`CredentialStorageClient`** (`POST /credentials` on holder CS) and **`IssuerServiceClient`** (`POST /issuance`)
+- **`DcpIssuance`** facade (mirror of `DcpPresentation`)
+
 ### Out of scope (separate modules / later)
 
-- **Credential Issuance Protocol (CIP)** — request/issue/store credentials (`POST /credentials`, issuer metadata, etc.)
+- Full asynchronous issuance pipeline (attestation, approval, signing, status polling)
+- Issuer metadata API, credential request status API, credential revocation admin APIs
+- Holder-side **`CredentialStorageHandler`** for incoming offers (phase 2+ extension in `de.eecc.dcp.service`)
 - Full **Secure Token Service (STS)** implementation (only client DTOs + optional HTTP client for OAuth2 client-credentials)
 - **DSP** contract negotiation, catalog federation, ODRL policy evaluation
 - VC type/schema definitions (dataspace-specific)
@@ -41,6 +55,8 @@ Mirror existing `oid4vp` conventions:
 | `DcqlQuery` | DCP scopes + Presentation Exchange definitions |
 | `VpTokenResponse` | `PresentationResponseMessage` (+ optional normalized internal model) |
 | `Oid4VpError` (sealed) | `DcpError` (sealed) |
+| — | `DcpIssuance` (CIP offer facade) |
+| — | `CredentialOfferDefinition` |
 
 ---
 
@@ -57,7 +73,7 @@ Mirror existing `oid4vp` conventions:
 | Terminology | https://github.com/eclipse-dataspace-dcp/decentralized-claims-protocol/blob/main/specifications/terminology.md | Holder, Verifier, Credential Service, etc. |
 | DCP profiles | https://github.com/eclipse-dataspace-dcp/decentralized-claims-protocol/blob/main/specifications/dcp.profiles.md | `vc20-bssl/jwt`, `vc11-sl2021/jwt` |
 | DSP profile (catalog trust metadata) | https://github.com/eclipse-dataspace-dcp/decentralized-claims-protocol/blob/main/specifications/dsp.profile.md | `/.well-known/dspace-trust` (optional integration) |
-| Credential Issuance Protocol | https://github.com/eclipse-dataspace-dcp/decentralized-claims-protocol/blob/main/specifications/credential.issuance.protocol.md | Storage API on CS (`POST /credentials`) — holder-side extension |
+| Credential Issuance Protocol | https://github.com/eclipse-dataspace-dcp/decentralized-claims-protocol/blob/main/specifications/credential.issuance.protocol.md | Offer, request, delivery on CS and issuer endpoints |
 | STS OpenAPI (non-normative) | https://github.com/eclipse-dataspace-dcp/decentralized-claims-protocol/blob/main/specifications/identity-trust-sts-api.yaml | OAuth2 client-credentials for SI tokens |
 | DCP Technology Compatibility Kit | https://github.com/eclipse-dataspacetck/dcp-tck | Compliance testing target |
 
@@ -67,6 +83,10 @@ Mirror existing `oid4vp` conventions:
 |--------|-----|
 | PresentationQueryMessage | https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/resources/presentation/presentation-query-message-schema.json |
 | PresentationResponseMessage | https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/resources/presentation/presentation-response-message-schema.json |
+| CredentialOfferMessage | https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/resources/issuance/credential-offer-message-schema.json |
+| CredentialObject | https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/resources/issuance/credential-object-schema.json |
+| CredentialRequestMessage | https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/resources/issuance/credential-request-message-schema.json |
+| CredentialMessage | https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/resources/issuance/credential-message-schema.json |
 | DCP JSON-LD context | https://w3id.org/dspace-dcp/v1.0/dcp.jsonld |
 
 ### External dependencies (referenced by DCP)
@@ -137,6 +157,19 @@ From [Verifiable Presentation Protocol — Presentation Flow](https://eclipse-da
 8. CS validates and returns `PresentationResponseMessage`
 9. Verifier validates VPs per [Presentation Validation](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/#presentation-validation)
 
+### Credential offer flow (normative sequence)
+
+From [Credential Issuance Protocol — Credential Offer Flow](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/#credential-offer-flow):
+
+1. Issuer prepares a **`CredentialOfferMessage`** listing one or more **`CredentialObject`** entries (id, credentialType, optional profile, issuancePolicy)
+2. Issuer discovers holder **`CredentialService`** endpoint from holder DID document
+3. Issuer POSTs the offer to `{credentialServiceUrl}/credentials` with a Bearer SI token
+4. Holder Credential Service stores the offer and returns a **`holderPid`** (process id)
+5. Holder (or issuer on behalf of holder) sends **`CredentialRequestMessage`** referencing offered credential object ids to issuer `{issuerServiceUrl}/issuance`
+6. Issuer asynchronously processes the request and delivers **`CredentialMessage`** (`status`: `ISSUED` or `REJECTED`) to holder `POST /credentials`
+
+**Redeem** is steps 5–6; this library builds request messages from offer definitions but does not implement issuer signing or delivery yet.
+
 ---
 
 ## 4. Proposed Maven module layout
@@ -159,10 +192,12 @@ Package root: `de.eecc.dcp.*`
 de.eecc.dcp/
 ├── Constants.java
 ├── api/
-│   ├── DcpPresentation.java           # Main facade
+│   ├── DcpPresentation.java           # Presentation facade
+│   ├── DcpIssuance.java               # Issuance offer facade
 │   ├── DcpBuilder.java
 │   ├── DcpOptions.java
-│   └── PresentationReceivedHandler.java
+│   ├── PresentationReceivedHandler.java
+│   └── OfferReceivedHandler.java
 ├── identity/
 │   ├── SelfIssuedIdToken.java         # Parsed JWT claims record
 │   ├── SelfIssuedIdTokenParser.java
@@ -175,14 +210,24 @@ de.eecc.dcp/
 │   ├── DcpMessage.java                # Base: @context, type
 │   ├── PresentationQueryMessage.java
 │   ├── PresentationResponseMessage.java
+│   ├── CredentialOfferMessage.java
+│   ├── CredentialObject.java
+│   ├── CredentialRequestMessage.java
+│   ├── CredentialMessage.java
 │   └── JsonLdMessageSupport.java        # Compact/expand; type vs @type
 ├── query/
 │   ├── PresentationQueryDefinition.java # Interface (like PresentationRequestDefinition)
 │   ├── ScopeQueryDefinition.java
 │   ├── PresentationExchangeQueryDefinition.java
 │   └── DcpScope.java
+├── issuance/
+│   ├── CredentialOfferDefinition.java   # Interface (mirror PresentationQueryDefinition)
+│   ├── TypeCredentialOfferDefinition.java
+│   └── IssuanceMessages.java
 ├── client/
-│   ├── CredentialServiceClient.java     # Pluggable
+│   ├── CredentialServiceClient.java     # Pluggable — presentation queries
+│   ├── CredentialStorageClient.java     # Pluggable — deliver offers to holder CS
+│   ├── IssuerServiceClient.java         # Pluggable — credential requests to issuer
 │   └── HttpCredentialServiceClient.java
 ├── validation/
 │   ├── PresentationValidator.java       # Pluggable (default: in-spec steps)
@@ -288,7 +333,44 @@ record PresentationResponseMessage(
 - `presentation`: array of VPs (heterogeneous string/object allowed)
 - `presentationSubmission`: REQUIRED when request contained `presentationDefinition`
 
-### 5.4 DcpScope helpers
+### 5.4 CredentialOfferMessage
+
+Schema: [credential-offer-message-schema.json](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/resources/issuance/credential-offer-message-schema.json)
+
+```java
+record CredentialOfferMessage(
+    List<Object> context,
+    String type,                        // "CredentialOfferMessage"
+    String issuer,                      // issuer DID
+    List<CredentialObject> credentials
+)
+```
+
+Validation rules:
+
+- MUST have `@context`, `type`, `issuer`, and non-empty `credentials`
+- Each `CredentialObject` MUST have `id` (URI) and `type` = `CredentialObject`
+
+### 5.5 CredentialRequestMessage
+
+Schema: [credential-request-message-schema.json](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/resources/issuance/credential-request-message-schema.json)
+
+```java
+record CredentialRequestMessage(
+    List<Object> context,
+    String type,                        // "CredentialRequestMessage"
+    String holderPid,
+    List<CredentialRequestReference> credentials  // { "id": "<CredentialObject.id>" }
+)
+```
+
+### 5.6 CredentialMessage (delivery)
+
+Schema: [credential-message-schema.json](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/resources/issuance/credential-message-schema.json)
+
+Delivered by issuer to holder `POST /credentials` after request processing. `status` is `ISSUED` or `REJECTED`.
+
+### 5.7 DcpScope helpers
 
 Normative scope format: `[alias]:[discriminator]`
 
@@ -308,7 +390,7 @@ record DcpScope(String alias, String discriminator) {
 
 Scope-to-PE mapping is **implementation-specific** on the Credential Service; the library should allow hosts to register scope aliases for validation expectations only.
 
-### 5.5 Credential Service discovery (from DID document)
+### 5.8 Credential Service discovery (from DID document)
 
 Non-normative example in spec:
 
@@ -324,9 +406,11 @@ DTO: `CredentialServiceEndpoint(String id, URI serviceEndpoint)`.
 
 Discovery constant: `Constants.CREDENTIAL_SERVICE_TYPE = "CredentialService"`.
 
-Resolution API path: `Constants.PATH_PRESENTATIONS_QUERY = "/presentations/query"`.
+Resolution API paths: `Constants.PRESENTATIONS_QUERY_PATH`, `Constants.CREDENTIALS_PATH`.
 
-### 5.6 STS DTOs (optional client)
+Issuer discovery constant: `Constants.ISSUER_SERVICE_TYPE = "IssuerService"`.
+
+### 5.9 STS DTOs (optional client)
 
 From [identity-trust-sts-api.yaml](https://github.com/eclipse-dataspace-dcp/decentralized-claims-protocol/blob/main/specifications/identity-trust-sts-api.yaml):
 
@@ -336,7 +420,7 @@ From [identity-trust-sts-api.yaml](https://github.com/eclipse-dataspace-dcp/dece
 
 Note: SI token is returned as `access_token` in the non-normative OpenAPI example.
 
-### 5.7 PresentationSession (internal lifecycle DTO)
+### 5.10 PresentationSession (internal lifecycle DTO)
 
 Not on the wire; analogous to `PresentationRequest`:
 
@@ -401,6 +485,42 @@ URI resolveCredentialService(String holderDid);
 String createVerifierToken(PresentationSession session);  // SI token for CS call
 ```
 
+### 6.1b DcpIssuance (facade)
+
+Proposed public methods:
+
+```java
+// --- Build and deliver offer (steps 1–4 of offer flow) ---
+CredentialOfferMessage buildOffer(CredentialOfferDefinition definition);
+
+String deliverOffer(
+    String holderDid,
+    CredentialOfferMessage offer,
+    String issuerBearerJwt
+);
+
+// --- Redeem offered credentials (step 5) ---
+CredentialRequestMessage buildRequest(CredentialOfferDefinition definition, String holderPid);
+
+String requestCredentials(
+    String issuerDid,
+    CredentialRequestMessage request,
+    String holderBearerJwt
+);
+
+// --- Combined issuer flow ---
+OfferFlowResult handleCredentialOffer(
+    String holderDid,
+    CredentialOfferDefinition definition,
+    String issuerBearerJwt,
+    OfferReceivedHandler handler
+);
+
+// --- Utilities ---
+URI resolveCredentialService(String holderDid);
+URI resolveIssuerService(String issuerDid);
+```
+
 ### 6.2 Pluggable interfaces
 
 | Interface | Responsibility | Default impl |
@@ -413,8 +533,29 @@ String createVerifierToken(PresentationSession session);  // SI token for CS cal
 | `PresentationValidator` | 8-step VP validation | `DefaultPresentationValidator` |
 | `PresentationSessionRepository` | Session persistence | `CaffeinePresentationSessionRepository` |
 | `PresentationReceivedHandler` | App callback after success | — |
+| `CredentialStorageClient` | POST offer to holder CS | `HttpCredentialStorageClient` |
+| `IssuerServiceClient` | POST request to issuer | `HttpIssuerServiceClient` |
+| `OfferReceivedHandler` | App callback after offer accepted | — |
 
-### 6.3 PresentationQueryDefinition
+### 6.3 CredentialOfferDefinition
+
+Mirror `PresentationQueryDefinition`:
+
+```java
+interface CredentialOfferDefinition {
+    CredentialOfferMessage toOfferMessage();
+
+    CredentialRequestMessage toRequestMessage(String holderPid);
+
+    void assertOfferMatches(CredentialOfferMessage message);
+}
+```
+
+Built-in implementation:
+
+1. **`TypeCredentialOfferDefinition`** — wraps `List<OfferedCredential>` (id, credentialType, profile, optional issuancePolicy)
+
+### 6.4 PresentationQueryDefinition
 
 Mirror `PresentationRequestDefinition`:
 
@@ -435,7 +576,7 @@ Two built-in implementations:
 1. **`ScopeQueryDefinition`** — wraps `List<DcpScope>`
 2. **`PresentationExchangeQueryDefinition`** — wraps PE `PresentationDefinition` + optional submission validation rules
 
-### 6.4 PresentationValidator (normative checklist)
+### 6.5 PresentationValidator (normative checklist)
 
 Implement [Presentation Validation](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/#presentation-validation):
 
@@ -452,7 +593,7 @@ Split by **DCP profile** (`vc20-bssl/jwt` vs `vc11-sl2021/jwt`) per [dcp.profile
 
 **Design choice:** allow delegating steps 2–6 to an external vc-verifier HTTP service (like oid4vp) while keeping steps 1, 7, 8 local — configurable via `DcpOptions`.
 
-### 6.5 PresentationReceivedHandler
+### 6.6 PresentationReceivedHandler
 
 Analogous to `DirectPostHandler` / `DirectPostResult`:
 
@@ -500,6 +641,9 @@ Mirror `Oid4VpError` pattern:
 | `CredentialServiceNotFound` | No `CredentialService` in DID document |
 | `CredentialServiceError` | HTTP 4xx/5xx from CS |
 | `InvalidQueryMessage` | Both scope and presentationDefinition set |
+| `InvalidOfferMessage` | Malformed or mismatched CredentialOfferMessage |
+| `InvalidCredentialRequest` | Malformed CredentialRequestMessage |
+| `IssuerServiceError` | HTTP 4xx/5xx from issuer |
 | `UnsupportedPresentationDefinition` | CS returned 501 |
 | `PresentationValidationFailed` | VP/VC validation step failed |
 | `InvalidPresentationResponse` | Malformed JSON, missing required fields |
@@ -519,10 +663,17 @@ public final class Constants {
     public static final String DCP_CONTEXT = "https://w3id.org/dspace-dcp/v1.0/dcp.jsonld";
     public static final String TYPE_PRESENTATION_QUERY = "PresentationQueryMessage";
     public static final String TYPE_PRESENTATION_RESPONSE = "PresentationResponseMessage";
+    public static final String TYPE_CREDENTIAL_OFFER = "CredentialOfferMessage";
+    public static final String TYPE_CREDENTIAL_REQUEST = "CredentialRequestMessage";
+    public static final String TYPE_CREDENTIAL_OBJECT = "CredentialObject";
+    public static final String TYPE_CREDENTIAL_MESSAGE = "CredentialMessage";
     public static final String CREDENTIAL_SERVICE_TYPE = "CredentialService";
+    public static final String ISSUER_SERVICE_TYPE = "IssuerService";
     public static final String SCOPE_ALIAS_VC_TYPE = "org.eclipse.dspace.dcp.vc.type";
     public static final String SCOPE_ALIAS_VC_ID = "org.eclipse.dspace.dcp.vc.id";
     public static final String PATH_PRESENTATIONS_QUERY = "/presentations/query";
+    public static final String PATH_CREDENTIALS = "/credentials";
+    public static final String PATH_ISSUANCE = "/issuance";
     public static final String PROFILE_VC20_BSSL_JWT = "vc20-bssl/jwt";
     public static final String PROFILE_VC11_SL2021_JWT = "vc11-sl2021/jwt";
     public static final int DEFAULT_SESSION_TTL_SECONDS = 300;
@@ -551,6 +702,18 @@ public final class Constants {
 - [ ] JSON-LD `type` / `@type` tolerant deserialization
 
 **Deliverable:** round-trip serialize/deserialize tests pass
+
+### Phase 1b — Issuance offer DTOs and definitions (1 week)
+
+- [x] `CredentialOfferMessage`, `CredentialObject`, `CredentialRequestMessage`, `CredentialMessage`
+- [x] `CredentialOfferDefinition` + `TypeCredentialOfferDefinition`
+- [x] `InvalidOfferMessage`, `InvalidCredentialRequest`, `IssuerServiceError`
+- [x] `CredentialStorageClient`, `IssuerServiceClient` interfaces
+- [x] `DcpIssuance` facade stub
+- [ ] Unit tests with fixtures from published JSON schemas
+- [ ] `HttpCredentialStorageClient`, `HttpIssuerServiceClient`
+
+**Deliverable:** issuer can build/deliver offers and build redeem requests; HTTP clients in integration tests
 
 ### Phase 2 — Identity layer (2–3 weeks)
 
@@ -731,7 +894,8 @@ No REST controllers in the library — host application exposes verifier endpoin
 ## 17. Success criteria
 
 - [ ] Verifier can validate client SI token, query CS, validate VPs, extract claims
-- [ ] Passes DCP TCK presentation-related tests
+- [ ] Issuer can build credential offers, deliver to holder CS, and build redeem requests
+- [ ] Passes DCP TCK presentation- and issuance-offer-related tests
 - [ ] API surface feels familiar to oid4vp users (facade, definition interface, repository, sealed errors)
 - [ ] Spring Boot starter enables drop-in configuration
 - [ ] Documented integration guide for DSP connector / dataspace login flows

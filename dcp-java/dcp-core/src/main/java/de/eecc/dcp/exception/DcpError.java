@@ -12,7 +12,8 @@ public sealed interface DcpError permits
         InvalidPresentationResponse,
         EmptyPresentationClaims,
         PresentationValidationFailed,
-        UnknownSession {
+        UnknownSession,
+        PresentationAccessDenied {
 
     String message();
 

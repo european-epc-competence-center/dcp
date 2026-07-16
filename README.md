@@ -46,6 +46,8 @@ This library focuses on two flows from [DCP v1.0.1](https://eclipse-dataspace-dc
 
 Unlike OpenID for Verifiable Presentations (`openid4vp://` redirects), DCP uses a **pull model**: the verifier or issuer calls the holder’s **Credential Service** over HTTPS. There is no wallet deep link; correlation relies on SI token claims (`sub`, `aud`, `jti`) and an optional opaque `token` claim for Credential Service access control.
 
+**No interactive user consent:** presentation delivery is decided automatically by the Credential Service (token validation, scopes, and access policy). There is no DCP-defined wallet UI step. Implementers **must** configure a list of `PresentationAccessRule`s via `PresentationAccessPolicy` / `DcpOptions.presentationAccess` (Spring: `dcp.presentation-access.rules`). Matching rules are collected; **deny always overrides allow**. Use `"*"` for any verifier or credential type. Empty list → **deny all**.
+
 ### Actors
 
 | Actor | Role |
@@ -203,7 +205,8 @@ Like [oid4vp](https://github.com/european-epc-competence-center/oid4vp), this li
 | **Wire messages** | `DcpPresentation.buildQueryMessage()`, `DcpIssuance.buildOfferMessage()`, … | Serialize JSON, set `Authorization: Bearer` SI token, POST to resolved URL |
 | **URLs** | `presentationsQueryUrl()`, `offersUrl()`, `issuerRequestUrl()`, … | Discover Credential Service / Issuer Service base URLs from DID documents |
 | **Verification** | `verifyQueryMessage()`, `verifyResponse()`, `verifyOffer()`, `verifyDelivery()`, … | Map `DcpException` to HTTP responses (`DcpExceptionHandler` in Spring) |
-| **Business logic** | Optional callbacks (`OfferReceivedHandler`, …) | Grant access, persist contracts, trigger issuance workflows |
+| **Verifier ACL** | `PresentationAccessPolicy` = list of `PresentationAccessRule` (default deny-all; deny overrides allow; `"*"` = any) | Configure rule list; call `verifyQueryMessage(message, verifierDid)` |
+| **Business logic** | Optional callbacks (`OfferReceivedHandler`, …) | Grant access, persist contracts, assemble `PresentationResponseMessage`, trigger issuance workflows |
 
 ## Quick Start
 
@@ -222,6 +225,13 @@ import java.time.Duration;
 
 DcpPresentation dcp = DcpPresentation.create(DcpOptions.builder()
         .sessionTtl(Duration.ofMinutes(5))
+        // Holder CS: list of rules (default: deny all). Deny overrides allow when both match.
+        // .presentationAccess(PresentationAccessPolicy.of(
+        //         PresentationAccessRule.allow()
+        //                 .verifiers("did:web:trusted-verifier.example")
+        //                 .credentialTypes("MembershipCredential")
+        //                 .build()))
+        // // or PresentationAccessPolicy.allowAll() for * / *
         .build());
 
 ScopeQueryDefinition query = ScopeQueryDefinition.of(
@@ -232,7 +242,7 @@ PresentationQueryMessage message = dcp.buildQueryMessage(query);
 // On response: dcp.verifyAndExtractClaims(query, response);
 ```
 
-`verifierDid` and DID resolution are configured when the identity layer is wired in; hosts typically provide a `DidDocumentResolver` pointing at a universal resolver or Identity Hub.
+On a **holder Credential Service**, after validating the verifier SI token, call `dcp.verifyQueryMessage(message, verifierDid)` so the configured `PresentationAccessPolicy` is enforced (`PresentationAccessDenied` → HTTP 403). Types are taken from `vc.type` scopes on the query. DID resolution for SI token checks is configured when the identity layer is wired in; hosts typically provide a `DidDocumentResolver` pointing at a universal resolver or Identity Hub.
 
 ### Presentation Query Definitions
 
@@ -358,7 +368,7 @@ CredentialRequestMessage request = issuance.buildRequestMessage(offer, "holder-p
 // POST JSON to issuance.issuerRequestUrl(issuerServiceUrl) with holder Bearer SI token.
 ```
 
-On the holder Credential Service, validate inbound payloads with `issuance.verifyOffer(offer, message)` or `dcp.verifyQueryMessage(message)`. On delivery, use `issuance.verifyDelivery(credentialMessage)`.
+On the holder Credential Service, validate inbound payloads with `issuance.verifyOffer(offer, message)` or `dcp.verifyQueryMessage(message, verifierDid)` (includes presentation access rules). On delivery, use `issuance.verifyDelivery(credentialMessage)`.
 
 ### Verifier presentation flow
 
@@ -434,6 +444,26 @@ dcp:
     # EDC example:
     # offers: /credentials
     # issuer-request: /issuance
+  # Holder CS: list of PresentationAccessRule (omit → deny all). Deny overrides allow on match.
+  # Use "*" for any verifier/type.
+  presentation-access:
+    rules:
+      - effect: allow
+        verifiers:
+          - did:web:trusted-verifier.example
+        credential-types:
+          - MembershipCredential
+          - OrgCredential
+      - effect: allow
+        verifiers:
+          - did:web:partner.example
+        credential-types:
+          - "*"
+      - effect: deny
+        verifiers:
+          - did:web:blocked-verifier.example
+        credential-types:
+          - "*"
 ```
 
 `DcpPresentation` and `DcpExceptionHandler` are auto-configured. Inject the facade where needed:

@@ -1,5 +1,7 @@
 package de.eecc.dcp.api;
 
+import de.eecc.dcp.api.access.PresentationAccessPolicy;
+import de.eecc.dcp.api.access.PresentationAccessRequest;
 import de.eecc.dcp.claims.PresentationClaims;
 import de.eecc.dcp.message.PresentationQueryMessage;
 import de.eecc.dcp.message.PresentationResponseMessage;
@@ -8,7 +10,7 @@ import de.eecc.dcp.query.QueryMessages;
 import lombok.Getter;
 
 /**
- * Verifier-side DCP presentation protocol helpers.
+ * DCP presentation protocol helpers (verifier outbound queries and holder inbound checks).
  *
  * <p>This library builds and validates wire messages; the host application owns HTTP routes and
  * transports payloads to and from Credential Services (mirrors oid4vp's separation of protocol logic
@@ -21,6 +23,18 @@ import lombok.Getter;
  *   <li>{@link #verifyAndExtractClaims(PresentationQueryDefinition, PresentationResponseMessage)}
  *       — validate response shape and read claims</li>
  * </ol>
+ *
+ * <p>Typical holder Credential Service flow for {@code POST /presentations/query}:
+ * <ol>
+ *   <li>Validate the verifier SI token (identity layer) and read the verifier DID ({@code sub})</li>
+ *   <li>{@link #verifyQueryMessage(PresentationQueryMessage, String)} — wire shape +
+ *       {@link PresentationAccessPolicy}</li>
+ *   <li>Assemble and return a {@link PresentationResponseMessage} (host responsibility)</li>
+ * </ol>
+ *
+ * <p>Presentation delivery is automatic (no interactive user consent in DCP). Configure
+ * {@link PresentationAccessPolicy} via {@link DcpOptions} so only trusted verifiers (and credential
+ * types) receive presentations; the default is deny-all until allow rules are configured.
  */
 @Getter
 public final class DcpPresentation {
@@ -49,9 +63,38 @@ public final class DcpPresentation {
         return definition.toQueryMessage();
     }
 
-    /** Validates an inbound query on a holder Credential Service. */
+    /**
+     * Validates inbound query wire shape only. Prefer
+     * {@link #verifyQueryMessage(PresentationQueryMessage, String)} on holder Credential Services so
+     * the configured {@link PresentationAccessPolicy} is applied.
+     */
     public void verifyQueryMessage(PresentationQueryMessage message) {
         QueryMessages.requireQueryMessage(message);
+    }
+
+    /**
+     * Validates an inbound query on a holder Credential Service: wire shape plus presentation access
+     * policy (verifier DID and credential types from {@code vc.type} scopes). Pass the verifier DID
+     * from the validated SI token ({@code sub} / {@code iss}).
+     */
+    public void verifyQueryMessage(PresentationQueryMessage message, String verifierDid) {
+        assertPresentationAllowed(PresentationAccessRequest.from(verifierDid, message));
+        QueryMessages.requireQueryMessage(message);
+    }
+
+    /**
+     * Asserts that {@code request} is permitted under {@link DcpOptions#getPresentationAccess()}.
+     */
+    public void assertPresentationAllowed(PresentationAccessRequest request) {
+        options.getPresentationAccess().requireAllowed(request);
+    }
+
+    /**
+     * Asserts that {@code verifierDid} may receive presentations for any credential type under the
+     * configured policy (useful before types are known).
+     */
+    public void assertVerifierAllowed(String verifierDid) {
+        assertPresentationAllowed(PresentationAccessRequest.anyCredentials(verifierDid));
     }
 
     /** Validates that a Credential Service response matches the query definition. */

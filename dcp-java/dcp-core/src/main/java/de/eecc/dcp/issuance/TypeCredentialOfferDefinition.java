@@ -3,6 +3,7 @@ package de.eecc.dcp.issuance;
 import com.fasterxml.jackson.databind.JsonNode;
 import de.eecc.dcp.exception.DcpException;
 import de.eecc.dcp.exception.InvalidOfferMessage;
+import de.eecc.dcp.exception.InvalidCredentialRequest;
 import de.eecc.dcp.message.CredentialObject;
 import de.eecc.dcp.message.CredentialOfferMessage;
 import de.eecc.dcp.message.CredentialRequestMessage;
@@ -79,6 +80,18 @@ public final class TypeCredentialOfferDefinition implements CredentialOfferDefin
             }
             if (expected.profile() != null && !expected.profile().equals(actual.profile())) {
                 throw new DcpException(new InvalidOfferMessage("profile mismatch for " + expected.id()));
+            }
+        }
+    }
+
+    @Override
+    public void assertRequestMatches(CredentialRequestMessage message) {
+        IssuanceMessages.requireCredentialRequestMessage(message);
+        var offeredIds = credentials.stream().map(OfferedCredential::id).toList();
+        for (CredentialRequestReference reference : message.credentials()) {
+            if (!offeredIds.contains(reference.id())) {
+                throw new DcpException(new InvalidCredentialRequest(
+                        "credential id " + reference.id() + " is not part of this offer"));
             }
         }
     }

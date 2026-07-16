@@ -26,6 +26,21 @@ class DcpAutoConfigurationTest {
     }
 
     @Test
+    void bindsCustomPathsFromProperties() {
+        contextRunner
+                .withPropertyValues(
+                        "dcp.paths.offers=/credentials",
+                        "dcp.paths.issuer-request=/issuance")
+                .run(context -> {
+                    DcpIssuance issuance = context.getBean(DcpIssuance.class);
+                    assertThat(issuance.offersUrl("https://cs.example.com"))
+                            .isEqualTo("https://cs.example.com/credentials");
+                    assertThat(issuance.issuerRequestUrl("https://issuer.example.com"))
+                            .isEqualTo("https://issuer.example.com/issuance");
+                });
+    }
+
+    @Test
     void createsDcpPresentationBeanFromProperties() {
         contextRunner
                 .withPropertyValues("dcp.session-ttl=PT10M")

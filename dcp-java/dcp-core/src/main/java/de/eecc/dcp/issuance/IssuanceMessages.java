@@ -8,6 +8,7 @@ import de.eecc.dcp.message.CredentialObject;
 import de.eecc.dcp.message.CredentialOfferMessage;
 import de.eecc.dcp.message.CredentialRequestMessage;
 import de.eecc.dcp.message.CredentialRequestReference;
+import de.eecc.dcp.message.CredentialMessage;
 
 import java.util.List;
 import java.util.Objects;
@@ -15,7 +16,7 @@ import java.util.Objects;
 /**
  * Shared helpers for building and validating credential issuance messages.
  */
-final class IssuanceMessages {
+public final class IssuanceMessages {
 
     private static final String DID_CONTEXT = "https://www.w3.org/ns/did/v1";
 
@@ -101,5 +102,47 @@ final class IssuanceMessages {
                     "type MUST be " + Constants.MESSAGE_TYPE_CREDENTIAL_OFFER));
         }
         validateOffer(message.issuer(), message.credentials());
+    }
+
+    static void requireCredentialRequestMessage(CredentialRequestMessage message) {
+        if (message == null) {
+            throw new DcpException(new InvalidCredentialRequest("CredentialRequestMessage must not be null"));
+        }
+        if (!Constants.MESSAGE_TYPE_CREDENTIAL_REQUEST.equals(message.type())) {
+            throw new DcpException(new InvalidCredentialRequest(
+                    "type MUST be " + Constants.MESSAGE_TYPE_CREDENTIAL_REQUEST));
+        }
+        validateCredentialRequest(message.holderPid(), message.credentials());
+    }
+
+    /** Validates an inbound {@link CredentialMessage} on a holder Credential Service. */
+    public static void requireCredentialMessage(CredentialMessage message) {
+        if (message == null) {
+            throw new DcpException(new InvalidCredentialRequest("CredentialMessage must not be null"));
+        }
+        if (!Constants.MESSAGE_TYPE_CREDENTIAL_MESSAGE.equals(message.type())) {
+            throw new DcpException(new InvalidCredentialRequest(
+                    "type MUST be " + Constants.MESSAGE_TYPE_CREDENTIAL_MESSAGE));
+        }
+        if (message.issuerPid() == null || message.issuerPid().isBlank()) {
+            throw new DcpException(new InvalidCredentialRequest("issuerPid MUST be present"));
+        }
+        if (message.holderPid() == null || message.holderPid().isBlank()) {
+            throw new DcpException(new InvalidCredentialRequest("holderPid MUST be present"));
+        }
+        if (message.status() == null || message.status().isBlank()) {
+            throw new DcpException(new InvalidCredentialRequest("status MUST be present"));
+        }
+        if (!Constants.CREDENTIAL_STATUS_ISSUED.equals(message.status())
+                && !Constants.CREDENTIAL_STATUS_REJECTED.equals(message.status())) {
+            throw new DcpException(new InvalidCredentialRequest(
+                    "status MUST be " + Constants.CREDENTIAL_STATUS_ISSUED + " or "
+                            + Constants.CREDENTIAL_STATUS_REJECTED));
+        }
+        if (Constants.CREDENTIAL_STATUS_ISSUED.equals(message.status())
+                && (message.credentials() == null || message.credentials().isEmpty())) {
+            throw new DcpException(new InvalidCredentialRequest(
+                    "credentials array MUST be non-empty when status is ISSUED"));
+        }
     }
 }

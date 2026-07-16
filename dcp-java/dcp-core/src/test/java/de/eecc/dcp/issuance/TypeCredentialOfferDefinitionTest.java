@@ -75,6 +75,22 @@ class TypeCredentialOfferDefinitionTest {
     }
 
     @Test
+    void assertRequestMatchesRejectsUnknownCredentialId() {
+        TypeCredentialOfferDefinition definition = TypeCredentialOfferDefinition.of(
+                ISSUER, TypeCredentialOfferDefinition.OfferedCredential.ofType(OBJECT_ID, "MembershipCredential"));
+
+        CredentialRequestMessage request = new CredentialRequestMessage(
+                List.of(Constants.DCP_JSON_LD_CONTEXT),
+                Constants.MESSAGE_TYPE_CREDENTIAL_REQUEST,
+                "holder-pid-1",
+                List.of(new de.eecc.dcp.message.CredentialRequestReference("urn:uuid:unknown")));
+
+        assertThatThrownBy(() -> definition.assertRequestMatches(request))
+                .isInstanceOf(DcpException.class)
+                .satisfies(ex -> assertThat(((DcpException) ex).error()).isInstanceOf(InvalidCredentialRequest.class));
+    }
+
+    @Test
     void rejectsBlankHolderPidOnRequest() {
         TypeCredentialOfferDefinition definition = TypeCredentialOfferDefinition.of(
                 ISSUER, TypeCredentialOfferDefinition.OfferedCredential.ofType(OBJECT_ID, "MembershipCredential"));

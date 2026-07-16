@@ -13,7 +13,7 @@ import java.util.Set;
 /**
  * Shared helpers for building and validating presentation query messages.
  */
-final class QueryMessages {
+public final class QueryMessages {
 
     private static final String DID_CONTEXT = "https://www.w3.org/ns/did/v1";
 
@@ -78,6 +78,27 @@ final class QueryMessages {
                 || response.presentation().isEmpty()) {
             throw new DcpException(new InvalidPresentationResponse(
                     "presentation array is required and must be non-empty"));
+        }
+    }
+
+    /** Validates an inbound {@link PresentationQueryMessage} on a holder Credential Service. */
+    public static void requireQueryMessage(PresentationQueryMessage message) {
+        if (message == null) {
+            throw new DcpException(new InvalidQueryMessage("PresentationQueryMessage must not be null"));
+        }
+        if (!Constants.MESSAGE_TYPE_PRESENTATION_QUERY.equals(message.type())) {
+            throw new DcpException(new InvalidQueryMessage(
+                    "type MUST be " + Constants.MESSAGE_TYPE_PRESENTATION_QUERY));
+        }
+        boolean hasScope = message.scope() != null && !message.scope().isEmpty();
+        boolean hasDefinition = hasPresentationDefinition(message.presentationDefinition());
+        if (hasScope && hasDefinition) {
+            throw new DcpException(new InvalidQueryMessage(
+                    "Must contain either scope or presentationDefinition, not both"));
+        }
+        if (!hasScope && !hasDefinition) {
+            throw new DcpException(new InvalidQueryMessage(
+                    "Must contain either scope or presentationDefinition"));
         }
     }
 

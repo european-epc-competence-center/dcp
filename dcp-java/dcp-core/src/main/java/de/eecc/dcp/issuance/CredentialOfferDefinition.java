@@ -10,7 +10,7 @@ import de.eecc.dcp.message.CredentialRequestMessage;
  */
 public interface CredentialOfferDefinition {
 
-    /** Builds the wire offer message for {@code POST /credentials} on the holder Credential Service. */
+    /** Builds the wire offer message for {@code POST /offers} on the holder Credential Service (path configurable). */
     CredentialOfferMessage toOfferMessage();
 
     /**
@@ -22,4 +22,7 @@ public interface CredentialOfferDefinition {
 
     /** Validates that an incoming offer structurally matches what was defined. */
     void assertOfferMatches(CredentialOfferMessage message);
+
+    /** Validates that a redeem request references credential object ids from this offer. */
+    void assertRequestMatches(CredentialRequestMessage message);
 }

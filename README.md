@@ -193,7 +193,7 @@ sequenceDiagram
 - **`CredentialMessage`**: `status` is **`ISSUED`** or **`REJECTED`** for the whole request; signed VCs arrive in `credentials` when issued
 - Holder DID document should advertise **`IssuerService`** when the holder may also initiate direct issuance requests (separate [issuance flow](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/#issuance-flow) in the spec)
 
-**Endpoint paths:** Defaults match DCP v1.0.1 (`/offers`, `/credentials` on Issuer Service, `/credentials` delivery, `/presentations/query`). Override per deployment via `DcpOptions.paths` or Spring `dcp.paths.*`. Use `DcpEndpointPaths.edcCompat()` for EDC-style routes (`/credentials` offers, `/issuance` requests).
+**Endpoint paths:** Defaults match DCP v1.0.1 (`/offers`, `/credentials` on Issuer Service, `/credentials` delivery, `/presentations/query`). Override per deployment via `DcpOptions.paths` or Spring `dcp.paths.*`.
 
 ### Library vs application responsibilities
 
@@ -339,16 +339,13 @@ See [Issue flow](#issue-flow--credential-offer-and-redemption) above for the ful
 
 ```java
 import de.eecc.dcp.Constants;
-import de.eecc.dcp.api.DcpEndpointPaths;
 import de.eecc.dcp.api.DcpIssuance;
 import de.eecc.dcp.api.DcpOptions;
 import de.eecc.dcp.issuance.TypeCredentialOfferDefinition;
 import de.eecc.dcp.message.CredentialOfferMessage;
 import de.eecc.dcp.message.CredentialRequestMessage;
 
-DcpIssuance issuance = DcpIssuance.create(DcpOptions.builder()
-        // .paths(DcpEndpointPaths.edcCompat())  // optional EDC routes
-        .build());
+DcpIssuance issuance = DcpIssuance.create(DcpOptions.builder().build());
 
 TypeCredentialOfferDefinition offer = TypeCredentialOfferDefinition.of(
         "did:web:issuer.example",
@@ -407,9 +404,6 @@ dcp:
     credential-delivery: /credentials
     issuer-request: /credentials
     presentations-query: /presentations/query
-    # EDC example:
-    # offers: /credentials
-    # issuer-request: /issuance
   # Holder CS: list of PresentationAccessRule (omit → deny all). Deny overrides allow on match.
   # Use "*" for any verifier/type.
   presentation-access:

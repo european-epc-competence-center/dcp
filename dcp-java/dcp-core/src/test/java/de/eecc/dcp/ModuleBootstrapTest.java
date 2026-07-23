@@ -35,7 +35,6 @@ class ModuleBootstrapTest {
         assertThat(Constants.MESSAGE_TYPE_CREDENTIAL_REQUEST).isEqualTo("CredentialRequestMessage");
         assertThat(Constants.OFFERS_PATH).isEqualTo("/offers");
         assertThat(Constants.ISSUER_CREDENTIALS_PATH).isEqualTo("/credentials");
-        assertThat(Constants.ISSUANCE_PATH).isEqualTo("/issuance");
     }
 
     @Test

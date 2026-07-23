@@ -28,17 +28,6 @@ public final class Constants {
     /** Issuer Service credential request endpoint per DCP v1.0.1. */
     public static final String ISSUER_CREDENTIALS_PATH = "/credentials";
 
-    /** EDC-style offer path on Credential Service (override via {@link de.eecc.dcp.api.DcpEndpointPaths}). */
-    public static final String LEGACY_OFFERS_PATH = "/credentials";
-    /** EDC-style request path on Issuer Service (override via {@link de.eecc.dcp.api.DcpEndpointPaths}). */
-    public static final String LEGACY_ISSUER_REQUEST_PATH = "/issuance";
-
-    /**
-     * @deprecated Use {@link #ISSUER_CREDENTIALS_PATH} or configure {@link de.eecc.dcp.api.DcpEndpointPaths#getIssuerRequest()}.
-     */
-    @Deprecated
-    public static final String ISSUANCE_PATH = LEGACY_ISSUER_REQUEST_PATH;
-
     public static final String CREDENTIAL_STATUS_ISSUED = "ISSUED";
     public static final String CREDENTIAL_STATUS_REJECTED = "REJECTED";
 

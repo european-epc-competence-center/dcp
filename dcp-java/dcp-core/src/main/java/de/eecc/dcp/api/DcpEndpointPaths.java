@@ -7,8 +7,7 @@ import lombok.Getter;
 /**
  * Relative HTTP paths for DCP Credential Service and Issuer Service endpoints.
  *
- * <p>Defaults match DCP v1.0.1. Override individual paths when your deployment uses alternate routes
- * (for example EDC Identity Hub with {@link #edcCompat()}).
+ * <p>Defaults match DCP v1.0.1. Override individual paths when your deployment uses alternate routes.
  */
 @Getter
 @Builder
@@ -29,15 +28,4 @@ public class DcpEndpointPaths {
     /** Credential Service: {@code PresentationQueryMessage} ingress. Spec default {@code /presentations/query}. */
     @Builder.Default
     private final String presentationsQuery = Constants.PRESENTATIONS_QUERY_PATH;
-
-    /**
-     * Paths commonly used by Eclipse Dataspace Components deployments: offers on {@code /credentials},
-     * requests on {@code /issuance}.
-     */
-    public static DcpEndpointPaths edcCompat() {
-        return DcpEndpointPaths.builder()
-                .offers(Constants.LEGACY_OFFERS_PATH)
-                .issuerRequest(Constants.LEGACY_ISSUER_REQUEST_PATH)
-                .build();
-    }
 }

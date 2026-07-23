@@ -27,14 +27,6 @@ class DcpFacadeTest {
             assertThat(paths.getIssuerRequest()).isEqualTo(Constants.ISSUER_CREDENTIALS_PATH);
             assertThat(paths.getPresentationsQuery()).isEqualTo(Constants.PRESENTATIONS_QUERY_PATH);
         }
-
-        @Test
-        void edcCompatUsesLegacyPaths() {
-            DcpEndpointPaths paths = DcpEndpointPaths.edcCompat();
-
-            assertThat(paths.getOffers()).isEqualTo(Constants.LEGACY_OFFERS_PATH);
-            assertThat(paths.getIssuerRequest()).isEqualTo(Constants.LEGACY_ISSUER_REQUEST_PATH);
-        }
     }
 
     @Nested
@@ -94,14 +86,17 @@ class DcpFacadeTest {
         }
 
         @Test
-        void resolvesEdcCompatUrls() {
-            DcpIssuance edc = DcpIssuance.create(DcpOptions.builder()
-                    .paths(DcpEndpointPaths.edcCompat())
+        void resolvesCustomPathOverrides() {
+            DcpIssuance custom = DcpIssuance.create(DcpOptions.builder()
+                    .paths(DcpEndpointPaths.builder()
+                            .offers("/custom-offers")
+                            .issuerRequest("/custom-issuance")
+                            .build())
                     .build());
 
-            assertThat(edc.offersUrl("https://cs.example.com")).isEqualTo("https://cs.example.com/credentials");
-            assertThat(edc.issuerRequestUrl("https://issuer.example.com"))
-                    .isEqualTo("https://issuer.example.com/issuance");
+            assertThat(custom.offersUrl("https://cs.example.com")).isEqualTo("https://cs.example.com/custom-offers");
+            assertThat(custom.issuerRequestUrl("https://issuer.example.com"))
+                    .isEqualTo("https://issuer.example.com/custom-issuance");
         }
 
         @Test

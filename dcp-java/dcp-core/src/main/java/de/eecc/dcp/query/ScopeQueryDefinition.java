@@ -1,7 +1,6 @@
 package de.eecc.dcp.query;
 
 import de.eecc.dcp.message.PresentationQueryMessage;
-import de.eecc.dcp.message.PresentationResponseMessage;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,11 +36,8 @@ public final class ScopeQueryDefinition implements PresentationQueryDefinition {
         return QueryMessages.scopeQuery(context, scopeStrings());
     }
 
-    @Override
-    public void assertResponseMatches(PresentationResponseMessage response) {
-        QueryMessages.requireNonEmptyPresentations(response);
-        // Spec: CS MAY return fewer presentations than scopes requested; at least one is required here.
-    }
+    // Spec: CS MAY return fewer presentations than scopes requested; default assertResponseStructure
+    // requires at least one presentation.
 
     private List<String> scopeStrings() {
         return scopes.stream().map(DcpScope::toScopeString).toList();

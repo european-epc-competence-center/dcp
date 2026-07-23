@@ -125,8 +125,8 @@ public final class Gs1LicenseQueryDefinition implements PresentationQueryDefinit
     }
 
     @Override
-    public void assertResponseMatches(PresentationResponseMessage response) {
-        scopeQuery.assertResponseMatches(response);
+    public void assertResponseStructure(PresentationResponseMessage response) {
+        scopeQuery.assertResponseStructure(response);
     }
 
     @Override

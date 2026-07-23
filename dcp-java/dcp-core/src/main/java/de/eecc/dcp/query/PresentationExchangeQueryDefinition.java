@@ -40,7 +40,7 @@ public final class PresentationExchangeQueryDefinition implements PresentationQu
     }
 
     @Override
-    public void assertResponseMatches(PresentationResponseMessage response) {
+    public void assertResponseStructure(PresentationResponseMessage response) {
         QueryMessages.requireNonEmptyPresentations(response);
         QueryMessages.requirePresentationSubmission(response);
         assertDefinitionIdMatches(response.presentationSubmission());

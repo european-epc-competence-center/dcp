@@ -53,7 +53,5 @@ public final class Constants {
     public static final String PROFILE_VC20_BSSL_JWT = "vc20-bssl/jwt";
     public static final String PROFILE_VC11_SL2021_JWT = "vc11-sl2021/jwt";
 
-    public static final int DEFAULT_SESSION_TTL_SECONDS = 300;
-
     private Constants() {}
 }

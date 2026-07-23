@@ -5,15 +5,14 @@ import de.eecc.dcp.claims.MapPresentationClaims;
 import de.eecc.dcp.claims.PresentationClaims;
 import de.eecc.dcp.exception.DcpException;
 import de.eecc.dcp.exception.EmptyPresentationClaims;
-import de.eecc.dcp.message.PresentationQueryMessage;
-import de.eecc.dcp.message.PresentationResponseMessage;
+import de.eecc.dcp.vp.PresentationParser;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Extracts claim values from JSON object presentations until the dedicated {@code PresentationParser} lands in Phase 6.
+ * Extracts claim values from JSON-object or JWT presentations via {@link PresentationParser}.
  */
 final class PresentationClaimExtractor {
 
@@ -26,11 +25,11 @@ final class PresentationClaimExtractor {
             if (presentation == null || presentation.isNull()) {
                 continue;
             }
-            if (presentation.isTextual()) {
-                // JWT envelope — full parsing deferred to Phase 6 (PresentationParser).
+            JsonNode root = PresentationParser.presentationRoot(presentation);
+            if (root != null && root.isObject()) {
+                extractFromObjectPresentation(root, "presentation." + index, claims);
+            } else if (presentation.isTextual()) {
                 claims.put("presentation." + index, presentation.textValue());
-            } else {
-                extractFromObjectPresentation(presentation, "presentation." + index, claims);
             }
             index++;
         }
@@ -49,6 +48,12 @@ final class PresentationClaimExtractor {
 
         JsonNode credentials = presentation.get("verifiableCredential");
         if (credentials == null || credentials.isNull()) {
+            JsonNode vp = presentation.get("vp");
+            if (vp != null && vp.isObject()) {
+                credentials = vp.get("verifiableCredential");
+            }
+        }
+        if (credentials == null || credentials.isNull()) {
             return;
         }
 
@@ -66,6 +71,14 @@ final class PresentationClaimExtractor {
             return;
         }
         if (credential.isTextual()) {
+            String compactJwt = PresentationParser.compactJwtFromTextualCredential(credential.textValue());
+            if (compactJwt != null) {
+                JsonNode payload = PresentationParser.parseJwtPayload(compactJwt);
+                if (payload != null && payload.isObject()) {
+                    extractFromCredential(payload, prefix, claims);
+                    return;
+                }
+            }
             claims.put(prefix, credential.textValue());
             return;
         }

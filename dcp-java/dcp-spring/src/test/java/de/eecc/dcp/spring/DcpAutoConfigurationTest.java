@@ -16,13 +16,11 @@ class DcpAutoConfigurationTest {
 
     @Test
     void createsDcpIssuanceBeanFromProperties() {
-        contextRunner
-                .withPropertyValues("dcp.session-ttl=PT10M")
-                .run(context -> {
-                    assertThat(context).hasSingleBean(DcpIssuance.class);
-                    assertThat(context.getBean(DcpIssuance.class).getOptions().getSessionTtl().toMinutes())
-                            .isEqualTo(10);
-                });
+        contextRunner.run(context -> {
+            assertThat(context).hasSingleBean(DcpIssuance.class);
+            assertThat(context.getBean(DcpIssuance.class).getOptions().getPresentationAccess().isDenyAll())
+                    .isTrue();
+        });
     }
 
     @Test
@@ -42,13 +40,7 @@ class DcpAutoConfigurationTest {
 
     @Test
     void createsDcpPresentationBeanFromProperties() {
-        contextRunner
-                .withPropertyValues("dcp.session-ttl=PT10M")
-                .run(context -> {
-                    assertThat(context).hasSingleBean(DcpPresentation.class);
-                    assertThat(context.getBean(DcpPresentation.class).getOptions().getSessionTtl().toMinutes())
-                            .isEqualTo(10);
-                });
+        contextRunner.run(context -> assertThat(context).hasSingleBean(DcpPresentation.class));
     }
 
     @Test
@@ -90,7 +82,6 @@ class DcpAutoConfigurationTest {
         DcpPresentation custom = DcpPresentation.create(DcpOptions.builder().build());
 
         contextRunner
-                .withPropertyValues("dcp.session-ttl=PT5M")
                 .withBean("customDcpPresentation", DcpPresentation.class, () -> custom)
                 .run(context -> assertThat(context.getBean(DcpPresentation.class)).isSameAs(custom));
     }

@@ -2,7 +2,7 @@
 
 Java library for the verifier-side and issuer-side of the [Eclipse Decentralized Claims Protocol (DCP) v1.0.1](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/): the **Verifiable Presentation Protocol** and the **Credential Issuance Protocol** offer flow.
 
-> **Status (0.1.x):** Wire DTOs, query/offer definitions, protocol validation helpers, configurable endpoint paths, and Spring Boot auto-configuration are available. HTTP clients, Self-Issued ID token validation, and cryptographic VP/VC verification are being added incrementally — see [implementation-plan.md](implementation-plan.md).
+> **Status (0.1.x):** Wire DTOs, query/offer definitions, protocol validation helpers, configurable endpoint paths, and Spring Boot auto-configuration are available. SI token validation, DID resolution, and cryptographic VP/VC verification stay with the host (external verifier). HTTP transport is also host-owned — see [implementation-plan.md](implementation-plan.md).
 
 ## Requirements
 
@@ -221,10 +221,7 @@ import de.eecc.dcp.message.PresentationQueryMessage;
 import de.eecc.dcp.query.DcpScope;
 import de.eecc.dcp.query.ScopeQueryDefinition;
 
-import java.time.Duration;
-
 DcpPresentation dcp = DcpPresentation.create(DcpOptions.builder()
-        .sessionTtl(Duration.ofMinutes(5))
         // Holder CS: list of rules (default: deny all). Deny overrides allow when both match.
         // .presentationAccess(PresentationAccessPolicy.of(
         //         PresentationAccessRule.allow()
@@ -242,7 +239,7 @@ PresentationQueryMessage message = dcp.buildQueryMessage(query);
 // On response: dcp.verifyAndExtractClaims(query, response);
 ```
 
-On a **holder Credential Service**, after validating the verifier SI token, call `dcp.verifyQueryMessage(message, verifierDid)` so the configured `PresentationAccessPolicy` is enforced (`PresentationAccessDenied` → HTTP 403). Types are taken from `vc.type` scopes on the query. DID resolution for SI token checks is configured when the identity layer is wired in; hosts typically provide a `DidDocumentResolver` pointing at a universal resolver or Identity Hub.
+On a **holder Credential Service**, after validating the verifier SI token (host / external verifier), call `dcp.verifyQueryMessage(message, verifierDid)` so the configured `PresentationAccessPolicy` is enforced (`PresentationAccessDenied` → HTTP 403). Types are taken from `vc.type` scopes on the query.
 
 ### Presentation Query Definitions
 
@@ -397,45 +394,14 @@ class ContractController {
 }
 ```
 
-For outbound queries, build the message with `dcp.buildQueryMessage(query)` and POST to `dcp.presentationsQueryUrl(credentialServiceUrl)` from your integration layer (HTTP client not included yet).
-
-**Future facade API** (SI token validation and session wiring — adapt paths and token issuance to your application):
-
-```java
-import de.eecc.dcp.api.DcpPresentation;
-import de.eecc.dcp.api.PresentationReceivedHandler;
-import de.eecc.dcp.claims.PresentationClaims;
-import de.eecc.dcp.query.ScopeQueryDefinition;
-import de.eecc.dcp.query.DcpScope;
-import de.eecc.dcp.session.PresentationSession;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
-
-ScopeQueryDefinition query = ScopeQueryDefinition.of(DcpScope.vcType("MembershipCredential"));
-
-@Getter
-@SuperBuilder
-class ContractPresentationSession extends PresentationSession {
-    // Application fields (never sent on the wire), e.g. contract offer id
-    private String contractOfferId;
-}
-
-// Incoming request with client Bearer SI token
-// dcp.handlePresentationRequest(clientBearerJwt, query, (session, response) -> {
-//     PresentationClaims claims = query.extractPresentationClaims(response);
-//     // issue DSP token, persist session, etc.
-// });
-```
-
-Lower-level access: `query.toQueryMessage()` for the wire payload, `query.assertResponseMatches(response)` for structural checks, and `CredentialServiceClient` for HTTP calls once the client implementation is registered.
+For outbound queries, build the message with `dcp.buildQueryMessage(query)` and POST to `dcp.presentationsQueryUrl(credentialServiceUrl)` from your integration layer (HTTP client not included — host owns transport).
 
 ## Spring Boot
 
-Add the starter dependency and configure session defaults in `application.yml`:
+Add the starter dependency and configure paths / access policy in `application.yml`:
 
 ```yaml
 dcp:
-  session-ttl: 5m
   paths:
     offers: /offers
     credential-delivery: /credentials
@@ -535,25 +501,19 @@ Then reference `0.1.0-SNAPSHOT` from a dependent project:
 dcp-java/
 ├── dcp-core/                       # artifact: dcp
 │   └── src/main/java/de/eecc/dcp/
-│       ├── api/                    # DcpPresentation facade, *Options, handlers
-│       ├── identity/               # Self-Issued ID tokens, DID resolution
-│       ├── message/                # PresentationQuery/ResponseMessage DTOs
+│       ├── api/                    # DcpPresentation / DcpIssuance facades, options, access policy
+│       ├── message/                # PresentationQuery/ResponseMessage and issuance DTOs
 │       ├── query/                  # PresentationQueryDefinition implementations
 │       │   └── template/           # Built-in query templates (e.g. gs1)
 │       ├── issuance/               # CredentialOfferDefinition implementations
-│       ├── client/                 # CredentialServiceClient, CredentialStorageClient, IssuerServiceClient
-│       ├── validation/             # PresentationValidator, DCP profiles
-│       ├── session/                # PresentationSession, repository
 │       ├── claims/                 # PresentationClaims extraction
-│       ├── sts/                    # Optional Secure Token Service client
 │       ├── exception/              # DcpError, DcpException
-│       ├── vp/                     # VP/VC parsing helpers
-│       └── service/                # Holder-side extension (phase 2+)
+│       └── vp/                     # VP/VC parsing helpers
 ├── dcp-spring/                     # Spring Boot auto-configuration
 └── dcp-spring-boot-starter/
 ```
 
-See [implementation-plan.md](implementation-plan.md) for the full design and phased rollout.
+See [implementation-plan.md](implementation-plan.md) for design notes. SI token validation, DID resolution, session stores, and HTTP clients are intentionally out of scope (external verifier / host).
 
 ## Repository Overview
 

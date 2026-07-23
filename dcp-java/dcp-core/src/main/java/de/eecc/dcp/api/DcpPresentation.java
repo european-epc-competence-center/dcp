@@ -26,7 +26,7 @@ import lombok.Getter;
  *
  * <p>Typical holder Credential Service flow for {@code POST /presentations/query}:
  * <ol>
- *   <li>Validate the verifier SI token (identity layer) and read the verifier DID ({@code sub})</li>
+ *   <li>Validate the verifier SI token (host / external verifier) and read the verifier DID ({@code sub})</li>
  *   <li>{@link #verifyQueryMessage(PresentationQueryMessage, String)} — wire shape +
  *       {@link PresentationAccessPolicy}</li>
  *   <li>Assemble and return a {@link PresentationResponseMessage} (host responsibility)</li>

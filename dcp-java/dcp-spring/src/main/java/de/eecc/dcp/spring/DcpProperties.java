@@ -9,14 +9,12 @@ import de.eecc.dcp.api.access.PresentationAccessRule;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 @ConfigurationProperties("dcp")
 public record DcpProperties(
-        Duration sessionTtl,
         @NestedConfigurationProperty Paths paths,
         @NestedConfigurationProperty PresentationAccess presentationAccess
 ) {
@@ -49,9 +47,6 @@ public record DcpProperties(
 
     public DcpOptions toOptions() {
         var builder = DcpOptions.builder();
-        if (sessionTtl != null) {
-            builder.sessionTtl(sessionTtl);
-        }
         var pathsBuilder = DcpEndpointPaths.builder();
         if (paths.offers() != null) {
             pathsBuilder.offers(paths.offers());

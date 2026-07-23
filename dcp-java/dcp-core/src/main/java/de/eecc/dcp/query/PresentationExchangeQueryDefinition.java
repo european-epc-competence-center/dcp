@@ -1,7 +1,6 @@
 package de.eecc.dcp.query;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import de.eecc.dcp.claims.PresentationClaims;
 import de.eecc.dcp.exception.DcpException;
 import de.eecc.dcp.exception.InvalidPresentationResponse;
 import de.eecc.dcp.message.PresentationQueryMessage;
@@ -45,12 +44,6 @@ public final class PresentationExchangeQueryDefinition implements PresentationQu
         QueryMessages.requireNonEmptyPresentations(response);
         QueryMessages.requirePresentationSubmission(response);
         assertDefinitionIdMatches(response.presentationSubmission());
-    }
-
-    @Override
-    public PresentationClaims extractPresentationClaims(PresentationResponseMessage response) {
-        assertResponseMatches(response);
-        return PresentationClaimExtractor.extract(response.presentation());
     }
 
     private void assertDefinitionIdMatches(JsonNode presentationSubmission) {

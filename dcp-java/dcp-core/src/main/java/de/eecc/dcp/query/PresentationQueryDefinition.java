@@ -16,6 +16,13 @@ public interface PresentationQueryDefinition {
     /** Validates that the response structurally matches what was requested (scope or Presentation Exchange). */
     void assertResponseMatches(PresentationResponseMessage response);
 
-    /** Extracts claims from verified presentations. */
-    PresentationClaims extractPresentationClaims(PresentationResponseMessage response);
+    /**
+     * Validates the response then extracts claims from presentations.
+     *
+     * <p>Override when extraction is template-specific (e.g. GS1 license claims).
+     */
+    default PresentationClaims extractPresentationClaims(PresentationResponseMessage response) {
+        assertResponseMatches(response);
+        return PresentationClaimExtractor.extract(response.presentation());
+    }
 }

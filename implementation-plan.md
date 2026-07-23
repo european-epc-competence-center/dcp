@@ -1,6 +1,8 @@
 # DCP Java Library — Implementation Plan
 
-Comprehensive plan for a Java library analogous to `oid4vp`, implementing the **Verifier-side** (and optionally **Credential Service** holder-side) of the [Eclipse Decentralized Claims Protocol (DCP) v1.0.1](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/) **Verifiable Presentation Protocol** and the **issuer-side offer flow** of the **Credential Issuance Protocol (CIP)**.
+Comprehensive plan for a Java library analogous to `oid4vp`, implementing **protocol helpers** for the [Eclipse Decentralized Claims Protocol (DCP) v1.0.1](https://eclipse-dataspace-dcp.github.io/decentralized-claims-protocol/v1.0.1/) **Verifiable Presentation Protocol** and the **issuer-side offer flow** of the **Credential Issuance Protocol (CIP)**.
+
+> **Scope note:** SI token validation, DID resolution, session stores, cryptographic VP/VC verification, and HTTP clients are **host / external verifier** concerns. This library owns wire DTOs, query/offer definitions, message validation, claim extraction helpers, and Spring Boot wiring.
 
 ## 1. Goal and scope
 
@@ -8,30 +10,29 @@ Comprehensive plan for a Java library analogous to `oid4vp`, implementing the **
 
 **Verifiable Presentation Protocol (presentation-focused)**
 
-- Validate **Self-Issued ID Tokens** (SI tokens) from clients
-- Discover holder **Credential Service** endpoints from DID documents
-- Build and send **`PresentationQueryMessage`** to `POST /presentations/query`
-- Parse **`PresentationResponseMessage`**, validate VPs/VCs per DCP
-- Extract **`PresentationClaims`** from verified presentations
-- Pluggable DID resolution, HTTP client, session store, validation backend
+- Build **`PresentationQueryMessage`** payloads for `POST /presentations/query`
+- Parse / validate **`PresentationResponseMessage`** shape (scopes / Presentation Exchange)
+- Extract **`PresentationClaims`** from presentations (JSON or JWT envelopes)
+- Holder-side **`PresentationAccessPolicy`** checks (verifier DID + credential types)
 - Optional Spring Boot auto-configuration (mirror `oid4vp-spring`)
 
-**Credential Issuance Protocol — offer flow (issuer-side, phase 1b)**
+**Credential Issuance Protocol — offer flow (issuer-side)**
 
 - Build **`CredentialOfferMessage`** with **`CredentialObject`** entries
 - **`CredentialOfferDefinition`** interface (mirror of `PresentationQueryDefinition`)
 - **`TypeCredentialOfferDefinition`** for credential-type offers
-- Build **`CredentialRequestMessage`** to redeem a prior offer (holder-side initiation)
+- Build **`CredentialRequestMessage`** to redeem a prior offer
 - Wire DTOs: **`CredentialMessage`** (delivery), **`CredentialContainer`**
-- Pluggable **`CredentialStorageClient`** (`POST /credentials` on holder CS) and **`IssuerServiceClient`** (`POST /issuance`)
 - **`DcpIssuance`** facade (mirror of `DcpPresentation`)
 
-### Out of scope (separate modules / later)
+### Out of scope (host / external verifier)
 
+- Validate **Self-Issued ID Tokens** and resolve DIDs
+- HTTP transport to Credential Service / Issuer Service
+- Verifier-side presentation **session** lifecycle
 - Full asynchronous issuance pipeline (attestation, approval, signing, status polling)
 - Issuer metadata API, credential request status API, credential revocation admin APIs
-- Holder-side **`CredentialStorageHandler`** for incoming offers (phase 2+ extension in `de.eecc.dcp.service`)
-- Full **Secure Token Service (STS)** implementation (only client DTOs + optional HTTP client for OAuth2 client-credentials)
+- Full **Secure Token Service (STS)** implementation
 - **DSP** contract negotiation, catalog federation, ODRL policy evaluation
 - VC type/schema definitions (dataspace-specific)
 - Identity Hub / EDC connector integration (consumers wire the library in)

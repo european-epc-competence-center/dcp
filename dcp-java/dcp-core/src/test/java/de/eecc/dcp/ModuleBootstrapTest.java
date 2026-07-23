@@ -7,8 +7,6 @@ import de.eecc.dcp.exception.DcpException;
 import de.eecc.dcp.exception.InternalError;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -24,13 +22,11 @@ class ModuleBootstrapTest {
 
     @Test
     void createsDcpIssuanceFromOptions() {
-        DcpOptions options = DcpOptions.builder()
-                .sessionTtl(Duration.ofMinutes(10))
-                .build();
+        DcpOptions options = DcpOptions.builder().build();
 
         DcpIssuance issuance = DcpIssuance.create(options);
 
-        assertThat(issuance.getOptions().getSessionTtl()).isEqualTo(Duration.ofMinutes(10));
+        assertThat(issuance.getOptions().getPaths().getOffers()).isEqualTo(Constants.OFFERS_PATH);
     }
 
     @Test
@@ -44,13 +40,11 @@ class ModuleBootstrapTest {
 
     @Test
     void createsDcpPresentationFromOptions() {
-        DcpOptions options = DcpOptions.builder()
-                .sessionTtl(Duration.ofMinutes(10))
-                .build();
+        DcpOptions options = DcpOptions.builder().build();
 
         DcpPresentation presentation = DcpPresentation.create(options);
 
-        assertThat(presentation.getOptions().getSessionTtl()).isEqualTo(Duration.ofMinutes(10));
+        assertThat(presentation.getOptions().getPresentationAccess().isDenyAll()).isTrue();
     }
 
     @Test

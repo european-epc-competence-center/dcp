@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-30
+
 ### Added
 
 - Multi-module Maven project (`dcp-core`, `dcp-spring`, `dcp-spring-boot-starter`) mirroring [oid4vp](https://github.com/european-epc-competence-center/oid4vp)

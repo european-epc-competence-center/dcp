@@ -17,7 +17,7 @@ Include the corresponding Maven dependency in your `pom.xml`:
 <dependency>
   <groupId>de.eecc.dcp</groupId>
   <artifactId>dcp</artifactId>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 
@@ -27,7 +27,7 @@ For Spring Boot applications, use the starter:
 <dependency>
   <groupId>de.eecc.dcp</groupId>
   <artifactId>dcp-spring-boot-starter</artifactId>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 

@@ -58,8 +58,9 @@ jobs:
         with:
           name: release-artifacts
           path: |
-            dcp-java/target/*.jar
-            dcp-java/target/*.asc
+            dcp-java/*/target/*.jar
+            dcp-java/*/target/*.asc
+          if-no-files-found: error
 
   create-release:
     runs-on: ubuntu-latest
@@ -117,4 +118,4 @@ jobs:
           body: ${{ steps.changelog.outputs.content }}
           draft: false
           prerelease: false
-          files: artifacts/*
+          files: artifacts/**/*

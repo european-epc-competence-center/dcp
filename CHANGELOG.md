@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-01
+
 ### Changed
 
 - **Breaking:** Jackson 3 and Spring Boot 4.1.1. Public DTOs and query/offer APIs now use `tools.jackson.databind.JsonNode` (and `JsonMapper` internally) instead of Jackson 2 `com.fasterxml.jackson.databind.*`. JSON annotations remain `com.fasterxml.jackson.annotation.*`. The Spring starter targets Boot **4.1.1** so hosts can bind library records as `@RequestBody`.
-
 ## [1.0.0] - 2026-07-30
 
 ### Added

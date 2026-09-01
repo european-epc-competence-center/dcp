@@ -1,7 +1,7 @@
 package de.eecc.dcp.query;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 import de.eecc.dcp.Constants;
 import de.eecc.dcp.claims.PresentationClaims;
 import de.eecc.dcp.exception.DcpException;
@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ScopeQueryDefinitionTest {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final JsonMapper mapper = new JsonMapper();
 
     @Test
     void buildsScopeQueryMessage() {

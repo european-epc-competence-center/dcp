@@ -1,6 +1,6 @@
 package de.eecc.dcp.spring;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import de.eecc.dcp.api.DcpIssuance;
 import de.eecc.dcp.api.DcpPresentation;
 import org.springframework.beans.factory.ObjectProvider;

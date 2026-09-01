@@ -1,6 +1,6 @@
 package de.eecc.dcp.issuance;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import de.eecc.dcp.exception.DcpException;
 import de.eecc.dcp.exception.InvalidOfferMessage;
 import de.eecc.dcp.exception.InvalidCredentialRequest;

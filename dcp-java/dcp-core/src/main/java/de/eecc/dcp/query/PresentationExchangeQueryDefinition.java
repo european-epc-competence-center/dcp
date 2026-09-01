@@ -1,6 +1,6 @@
 package de.eecc.dcp.query;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import de.eecc.dcp.exception.DcpException;
 import de.eecc.dcp.exception.InvalidPresentationResponse;
 import de.eecc.dcp.message.PresentationQueryMessage;
@@ -48,7 +48,7 @@ public final class PresentationExchangeQueryDefinition implements PresentationQu
 
     private void assertDefinitionIdMatches(JsonNode presentationSubmission) {
         JsonNode definitionId = presentationSubmission.get("definition_id");
-        if (definitionId == null || definitionId.isNull() || definitionId.asText().isBlank()) {
+        if (definitionId == null || definitionId.isNull() || definitionId.asString().isBlank()) {
             throw new DcpException(new InvalidPresentationResponse(
                     "presentationSubmission.definition_id is required"));
         }
@@ -56,8 +56,8 @@ public final class PresentationExchangeQueryDefinition implements PresentationQu
         JsonNode queryDefinitionId = presentationDefinition.get("id");
         if (queryDefinitionId != null
                 && !queryDefinitionId.isNull()
-                && !queryDefinitionId.asText().isBlank()
-                && !definitionId.asText().equals(queryDefinitionId.asText())) {
+                && !queryDefinitionId.asString().isBlank()
+                && !definitionId.asString().equals(queryDefinitionId.asString())) {
             throw new DcpException(new InvalidPresentationResponse(
                     "presentationSubmission.definition_id does not match presentationDefinition.id"));
         }

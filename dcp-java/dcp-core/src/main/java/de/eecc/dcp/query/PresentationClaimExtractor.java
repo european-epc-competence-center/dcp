@@ -1,6 +1,6 @@
 package de.eecc.dcp.query;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import de.eecc.dcp.claims.MapPresentationClaims;
 import de.eecc.dcp.claims.PresentationClaims;
 import de.eecc.dcp.exception.DcpException;
@@ -28,8 +28,8 @@ final class PresentationClaimExtractor {
             JsonNode root = PresentationParser.presentationRoot(presentation);
             if (root != null && root.isObject()) {
                 extractFromObjectPresentation(root, "presentation." + index, claims);
-            } else if (presentation.isTextual()) {
-                claims.put("presentation." + index, presentation.textValue());
+            } else if (presentation.isString()) {
+                claims.put("presentation." + index, presentation.stringValue());
             }
             index++;
         }
@@ -43,7 +43,7 @@ final class PresentationClaimExtractor {
     private static void extractFromObjectPresentation(JsonNode presentation, String prefix, Map<String, Object> claims) {
         JsonNode holder = presentation.get("holder");
         if (holder != null && !holder.isNull()) {
-            claims.put(prefix + ".holder", holder.isTextual() ? holder.textValue() : holder);
+            claims.put(prefix + ".holder", holder.isString() ? holder.stringValue() : holder);
         }
 
         JsonNode credentials = presentation.get("verifiableCredential");
@@ -70,8 +70,8 @@ final class PresentationClaimExtractor {
         if (credential == null || credential.isNull()) {
             return;
         }
-        if (credential.isTextual()) {
-            String compactJwt = PresentationParser.compactJwtFromTextualCredential(credential.textValue());
+        if (credential.isString()) {
+            String compactJwt = PresentationParser.compactJwtFromTextualCredential(credential.stringValue());
             if (compactJwt != null) {
                 JsonNode payload = PresentationParser.parseJwtPayload(compactJwt);
                 if (payload != null && payload.isObject()) {
@@ -79,7 +79,7 @@ final class PresentationClaimExtractor {
                     return;
                 }
             }
-            claims.put(prefix, credential.textValue());
+            claims.put(prefix, credential.stringValue());
             return;
         }
 
@@ -90,7 +90,7 @@ final class PresentationClaimExtractor {
 
         JsonNode issuer = credential.get("issuer");
         if (issuer != null && !issuer.isNull()) {
-            claims.put(prefix + ".issuer", issuer.isTextual() ? issuer.textValue() : issuer);
+            claims.put(prefix + ".issuer", issuer.isString() ? issuer.stringValue() : issuer);
         }
 
         JsonNode subject = credential.path("credentialSubject");
@@ -100,8 +100,8 @@ final class PresentationClaimExtractor {
     }
 
     private static Object jsonValue(JsonNode node) {
-        if (node.isTextual()) {
-            return node.textValue();
+        if (node.isString()) {
+            return node.stringValue();
         }
         if (node.isArray()) {
             var values = new java.util.ArrayList<Object>();

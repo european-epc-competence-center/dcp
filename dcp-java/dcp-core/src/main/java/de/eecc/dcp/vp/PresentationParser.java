@@ -1,10 +1,11 @@
 package de.eecc.dcp.vp;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.eecc.dcp.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -17,7 +18,7 @@ import java.util.function.Function;
 public final class PresentationParser {
 
     private static final Logger log = LoggerFactory.getLogger(PresentationParser.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final JsonMapper MAPPER = new JsonMapper();
 
     private PresentationParser() {}
 
@@ -56,7 +57,7 @@ public final class PresentationParser {
             }
             byte[] decoded = Base64.getUrlDecoder().decode(parts[1]);
             return MAPPER.readTree(decoded);
-        } catch (IllegalArgumentException | java.io.IOException e) {
+        } catch (IllegalArgumentException | JacksonException e) {
             log.warn("Failed to parse JWT presentation payload: {}", e.getMessage());
             return null;
         }
@@ -66,8 +67,8 @@ public final class PresentationParser {
         if (presentationNode == null || presentationNode.isMissingNode()) {
             return null;
         }
-        if (presentationNode.isTextual() && isCompactJwt(presentationNode.asText())) {
-            return parseJwtPayload(presentationNode.asText());
+        if (presentationNode.isString() && isCompactJwt(presentationNode.asString())) {
+            return parseJwtPayload(presentationNode.asString());
         }
         return presentationNode;
     }
@@ -186,8 +187,8 @@ public final class PresentationParser {
             return null;
         }
 
-        if (credentialEntry.isTextual()) {
-            String compactJwt = compactJwtFromTextualCredential(credentialEntry.asText());
+        if (credentialEntry.isString()) {
+            String compactJwt = compactJwtFromTextualCredential(credentialEntry.asString());
             if (compactJwt == null) {
                 return null;
             }
@@ -243,10 +244,10 @@ public final class PresentationParser {
         }
 
         for (JsonNode entry : typeNode) {
-            if (!entry.isTextual()) {
+            if (!entry.isString()) {
                 continue;
             }
-            String value = entry.asText();
+            String value = entry.asString();
             if (acceptedTypes != null && !acceptedTypes.isEmpty()) {
                 if (acceptedTypes.contains(value)) {
                     return value;
@@ -266,8 +267,8 @@ public final class PresentationParser {
             return null;
         }
 
-        if (credentialEntry.isTextual()) {
-            String compactJwt = compactJwtFromTextualCredential(credentialEntry.asText());
+        if (credentialEntry.isString()) {
+            String compactJwt = compactJwtFromTextualCredential(credentialEntry.asString());
             if (compactJwt == null) {
                 return null;
             }
@@ -321,10 +322,10 @@ public final class PresentationParser {
     }
 
     private static String textClaim(JsonNode value) {
-        if (value == null || value.isNull() || !value.isTextual()) {
+        if (value == null || value.isNull() || !value.isString()) {
             return null;
         }
-        String text = value.asText().trim();
+        String text = value.asString().trim();
         return text.isBlank() ? null : text;
     }
 
@@ -343,16 +344,16 @@ public final class PresentationParser {
         }
 
         JsonNode id = credentialEntry.get("id");
-        if (id != null && id.isTextual()) {
-            String compactJwt = compactJwtFromTextualCredential(id.asText());
+        if (id != null && id.isString()) {
+            String compactJwt = compactJwtFromTextualCredential(id.asString());
             if (compactJwt != null) {
                 return compactJwt;
             }
         }
 
         JsonNode jwt = credentialEntry.get("jwt");
-        if (jwt != null && jwt.isTextual()) {
-            return compactJwtFromTextualCredential(jwt.asText());
+        if (jwt != null && jwt.isString()) {
+            return compactJwtFromTextualCredential(jwt.asString());
         }
 
         return null;
@@ -399,8 +400,8 @@ public final class PresentationParser {
             return null;
         }
 
-        if (credentialEntry.isTextual()) {
-            String compactJwt = compactJwtFromTextualCredential(credentialEntry.asText());
+        if (credentialEntry.isString()) {
+            String compactJwt = compactJwtFromTextualCredential(credentialEntry.asString());
             if (compactJwt == null) {
                 return null;
             }

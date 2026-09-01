@@ -9,6 +9,7 @@ import de.eecc.dcp.message.CredentialOfferMessage;
 import de.eecc.dcp.message.CredentialRequestMessage;
 import de.eecc.dcp.message.CredentialRequestReference;
 import de.eecc.dcp.message.CredentialMessage;
+import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 import java.util.Objects;
@@ -45,7 +46,7 @@ public final class IssuanceMessages {
             String credentialType,
             String profile,
             String offerReason,
-            com.fasterxml.jackson.databind.JsonNode issuancePolicy) {
+            JsonNode issuancePolicy) {
         Objects.requireNonNull(id, "id");
         if (id.isBlank()) {
             throw new DcpException(new InvalidOfferMessage("credential object id must not be blank"));

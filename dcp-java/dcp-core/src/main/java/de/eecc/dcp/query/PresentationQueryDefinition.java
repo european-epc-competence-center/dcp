@@ -1,6 +1,6 @@
 package de.eecc.dcp.query;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import de.eecc.dcp.claims.PresentationClaims;
 import de.eecc.dcp.exception.DcpException;
 import de.eecc.dcp.exception.InvalidPresentationResponse;

@@ -1,6 +1,6 @@
 package de.eecc.dcp.query.template.gs1;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import de.eecc.dcp.claims.PresentationClaims;
 import de.eecc.dcp.message.PresentationQueryMessage;
 import de.eecc.dcp.message.PresentationResponseMessage;
@@ -221,10 +221,10 @@ public final class Gs1LicenseQueryDefinition implements PresentationQueryDefinit
 
     private static String textClaim(JsonNode node, String field) {
         JsonNode value = node.get(field);
-        if (value == null || value.isNull() || !value.isTextual()) {
+        if (value == null || value.isNull() || !value.isString()) {
             return null;
         }
-        String text = value.asText().trim();
+        String text = value.asString().trim();
         return text.isBlank() ? null : text;
     }
 
@@ -240,11 +240,11 @@ public final class Gs1LicenseQueryDefinition implements PresentationQueryDefinit
         }
 
         JsonNode nameNode = organization.get(GS1_ORGANIZATION_NAME);
-        if (nameNode == null || nameNode.isNull() || !nameNode.isTextual()) {
+        if (nameNode == null || nameNode.isNull() || !nameNode.isString()) {
             return null;
         }
 
-        String value = nameNode.asText().trim();
+        String value = nameNode.asString().trim();
         return value.isBlank() ? null : value;
     }
 
@@ -260,11 +260,11 @@ public final class Gs1LicenseQueryDefinition implements PresentationQueryDefinit
         }
 
         JsonNode glnNode = organization.get(GS1_PARTY_GLN);
-        if (glnNode == null || glnNode.isNull() || !glnNode.isTextual()) {
+        if (glnNode == null || glnNode.isNull() || !glnNode.isString()) {
             return null;
         }
 
-        String value = glnNode.asText().trim();
+        String value = glnNode.asString().trim();
         return value.isBlank() ? null : value;
     }
 

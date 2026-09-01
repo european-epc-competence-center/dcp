@@ -6,6 +6,7 @@ import de.eecc.dcp.exception.InvalidQueryMessage;
 import de.eecc.dcp.exception.InvalidPresentationResponse;
 import de.eecc.dcp.message.PresentationQueryMessage;
 import de.eecc.dcp.message.PresentationResponseMessage;
+import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 import java.util.Set;
@@ -37,13 +38,13 @@ public final class QueryMessages {
     }
 
     static PresentationQueryMessage presentationExchangeQuery(
-            List<Object> context, com.fasterxml.jackson.databind.JsonNode presentationDefinition) {
+            List<Object> context, JsonNode presentationDefinition) {
         validatePresentationDefinitionOnly(null, presentationDefinition);
         return new PresentationQueryMessage(
                 context, Constants.MESSAGE_TYPE_PRESENTATION_QUERY, null, presentationDefinition);
     }
 
-    static void validateScopeOnly(List<String> scope, com.fasterxml.jackson.databind.JsonNode presentationDefinition) {
+    static void validateScopeOnly(List<String> scope, JsonNode presentationDefinition) {
         boolean hasScope = scope != null && !scope.isEmpty();
         boolean hasDefinition = hasPresentationDefinition(presentationDefinition);
         if (hasScope && hasDefinition) {
@@ -56,7 +57,7 @@ public final class QueryMessages {
     }
 
     static void validatePresentationDefinitionOnly(
-            List<String> scope, com.fasterxml.jackson.databind.JsonNode presentationDefinition) {
+            List<String> scope, JsonNode presentationDefinition) {
         boolean hasScope = scope != null && !scope.isEmpty();
         boolean hasDefinition = hasPresentationDefinition(presentationDefinition);
         if (hasScope && hasDefinition) {
@@ -68,7 +69,7 @@ public final class QueryMessages {
         }
     }
 
-    static boolean hasPresentationDefinition(com.fasterxml.jackson.databind.JsonNode presentationDefinition) {
+    static boolean hasPresentationDefinition(JsonNode presentationDefinition) {
         return presentationDefinition != null && !presentationDefinition.isNull() && !presentationDefinition.isEmpty();
     }
 

@@ -8,6 +8,8 @@ Java library for the verifier-side and issuer-side of the [Eclipse Decentralized
 
 - Java 25 JDK
 - Maven 3.9+
+- Jackson 3 (`tools.jackson.*`; annotations stay `com.fasterxml.jackson.annotation.*`)
+- Spring Boot 4.1+ for `dcp-spring-boot-starter`
 
 ## Installation
 
@@ -295,10 +297,10 @@ DCP defines scopes as `[alias]:[discriminator]`, for example `org.eclipse.dspace
 For Presentation Exchange, wrap a `presentationDefinition` JSON object:
 
 ```java
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import de.eecc.dcp.query.PresentationExchangeQueryDefinition;
 
-var mapper = new ObjectMapper();
+var mapper = new JsonMapper();
 var presentationDefinition = mapper.readTree("""
         {
           "id": "membership-pd",

@@ -1,7 +1,7 @@
 package de.eecc.dcp.query.template.gs1;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 import de.eecc.dcp.Constants;
 import de.eecc.dcp.claims.PresentationClaims;
 import de.eecc.dcp.message.PresentationQueryMessage;
@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class Gs1LicenseQueryDefinitionTest {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final JsonMapper MAPPER = new JsonMapper();
 
     @Test
     void toQueryMessage_requestsGs1LicenseTypesViaDcpScopes() {
